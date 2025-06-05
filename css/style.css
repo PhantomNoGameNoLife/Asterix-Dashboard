@@ -1,0 +1,186 @@
+/************************ start general css  ************************/
+img {
+    display: block;
+    max-width: 150px;
+}
+
+textarea {
+    resize: none;
+}
+
+/************************ end general css  ************************/
+
+/************************ start header ************************/
+header {
+    background-color: #212529;
+    border-bottom: 2px solid #34495e;
+    padding-top: 2rem;
+}
+
+header h1 {
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+}
+
+header p {
+    font-size: 1rem;
+}
+
+/************************ end header ************************/
+
+/************************ start form section  ************************/
+.product-form>div {
+    position: relative;
+    margin-bottom: 2.25rem;
+}
+
+.form-control {
+    background-color: #393F44;
+    border: solid 1px #85888C;
+    color: #fff;
+}
+
+.form-control::placeholder {
+    color: #fff;
+    opacity: 0.7;
+}
+
+#preview-image {
+    max-width: 100px;
+    margin-top: 10px
+}
+
+.loader {
+    display: none;
+    margin: 20px auto;
+    border: 6px solid #e9ecef;
+    border-top: 6px solid #0d6efd;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/************************ end form section  ************************/
+
+/* ************************ start upload area  ************************/
+
+.instructions {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.upload-area {
+    border: 2px dashed #6c757d;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.upload-area:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.upload-icon {
+    font-size: 2rem;
+    color: #0d6efd;
+    margin-bottom: 10px;
+}
+
+.upload-text {
+    color: #adb5bd;
+}
+
+.file-list {
+    max-height: 100px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #6c757d #343a40;
+}
+
+.file-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.file-list::-webkit-scrollbar-track {
+    background: #343a40;
+    border-radius: 10px;
+}
+
+.file-list::-webkit-scrollbar-thumb {
+    background: #6c757d;
+    border-radius: 10px;
+}
+
+.file-list::-webkit-scrollbar-thumb:hover {
+    background: #adb5bd;
+}
+
+.file-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.file-list li {
+    padding: 5px 0;
+    color: #ffffff;
+}
+
+.progress-bar {
+    width: 0;
+}
+
+.progress-box {
+    margin-top: 1rem;
+}
+
+.alert-container {
+    margin-top: 1rem;
+}
+
+/************************ end upload area  ************************/
+
+/************************ start table section  ************************/
+.table-responsive-custom {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #6c757d #343a40;
+    border-radius: 0.5rem;
+}
+
+.table-responsive-custom::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive-custom::-webkit-scrollbar-track {
+    background: #343a40;
+    border-radius: 10px;
+}
+
+.table-responsive-custom::-webkit-scrollbar-thumb {
+    background: #6c757d;
+    border-radius: 10px;
+}
+
+.table-responsive-custom::-webkit-scrollbar-thumb:hover {
+    background: #adb5bd;
+}
+
+tbody tr td:nth-child(6) {
+    word-break: break-word;
+}
+
+/************************ end table section  ************************/

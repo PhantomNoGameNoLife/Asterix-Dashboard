@@ -1,0 +1,6 @@
+/* Media Queries from sm to xs */
+@media screen and (max-width: 576px) {
+    tbody button.btn {
+        font-size: .875rem;
+    }
+}
