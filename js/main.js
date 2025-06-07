@@ -49,6 +49,62 @@ const deleteProductNumber = document.getElementById('deleteProductNumber');
 const deleteProductName = document.getElementById('deleteProductName');
 const confirmDeleteButton = document.getElementById('confirmDeleteButton');
 
+// Initialize Usage Modal
+const usageModal = new bootstrap.Modal(document.getElementById('usageModal'), {
+    backdrop: 'static',
+    keyboard: false
+});
+
+// Store the element that had focus before the modal opened
+let previousActiveElement = null;
+
+// Add event listeners for modal focus management
+confirmDeleteModal._element.addEventListener('show.bs.modal', function() {
+    previousActiveElement = document.activeElement;
+    // Remove inert from modal when it's shown
+    this.removeAttribute('inert');
+});
+
+usageModal._element.addEventListener('show.bs.modal', function() {
+    previousActiveElement = document.activeElement;
+    // Remove inert from modal when it's shown
+    this.removeAttribute('inert');
+});
+
+confirmDeleteModal._element.addEventListener('shown.bs.modal', function() {
+    // Focus the confirm button when modal is shown
+    confirmDeleteButton.focus();
+});
+
+usageModal._element.addEventListener('shown.bs.modal', function() {
+    // Focus the close button when modal is shown
+    this.querySelector('.btn-close').focus();
+});
+
+confirmDeleteModal._element.addEventListener('hide.bs.modal', function() {
+    // Add inert back to modal when it's hidden
+    this.setAttribute('inert', '');
+});
+
+usageModal._element.addEventListener('hide.bs.modal', function() {
+    // Add inert back to modal when it's hidden
+    this.setAttribute('inert', '');
+});
+
+confirmDeleteModal._element.addEventListener('hidden.bs.modal', function() {
+    // Return focus to the element that had focus before the modal opened
+    if (previousActiveElement) {
+        previousActiveElement.focus();
+    }
+});
+
+usageModal._element.addEventListener('hidden.bs.modal', function() {
+    // Return focus to the element that had focus before the modal opened
+    if (previousActiveElement) {
+        previousActiveElement.focus();
+    }
+});
+
 // Load products from Firestore with sorting by createdAt
 async function loadProducts() {
     loader.style.display = 'block';
@@ -154,18 +210,34 @@ function validDescription(proDesc) {
     return isValid;
 }
 
-async function addProduct() {
-    if (!validName(productName.value) || !validCategory(productCategory.value) ||
-        !validPrice(productPrice.value) || !validImageFile(productImage) ||
-        !validDescription(productDescription.value)) {
-        return;
+// Loader functions
+function showLoader(loaderId) {
+    const loader = document.getElementById(loaderId);
+    if (loader) {
+        loader.classList.add('active');
     }
+}
 
-    loader.style.display = 'block';
-    addProductButton.disabled = true;
-    const file = productImage.files[0];
-    const storageRef = storage.ref(`products/${file.name}`);
+function hideLoader(loaderId) {
+    const loader = document.getElementById(loaderId);
+    if (loader) {
+        loader.classList.remove('active');
+    }
+}
+
+// Update addProduct function
+async function addProduct() {
     try {
+        showLoader('loader');
+        if (!validName(productName.value) || !validCategory(productCategory.value) ||
+            !validPrice(productPrice.value) || !validImageFile(productImage) ||
+            !validDescription(productDescription.value)) {
+            return;
+        }
+
+        addProductButton.disabled = true;
+        const file = productImage.files[0];
+        const storageRef = storage.ref(`products/${file.name}`);
         await storageRef.put(file);
         const imageUrl = await storageRef.getDownloadURL();
 
@@ -191,10 +263,10 @@ async function addProduct() {
         clearInputs();
         displayProduct(listOfProducts);
     } catch (error) {
-        console.error("Error adding product: ", error);
-        showValidationTooltip(productImage, false, "Failed to upload image. Try again.");
+        console.error('Error adding product:', error);
+        showAlert('Error adding product. Please try again.', 'danger');
     } finally {
-        loader.style.display = 'none';
+        hideLoader('loader');
         addProductButton.disabled = false;
     }
 }
@@ -243,29 +315,30 @@ function updateFileList() {
     }
 }
 
+// Update uploadBatch function
 async function uploadBatch() {
-    if (!validExcelFile(excelUploadInput)) {
-        return;
-    }
-    const imageFiles = Array.from(folderUploadInput.files).filter(file =>
-        /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(file.name) &&
-        file.webkitRelativePath.split('/').length === 2
-    );
-    const excelFile = excelUploadInput.files[0];
-
-    if (!excelFile || imageFiles.length === 0) {
-        logBox.classList.remove('d-none');
-        logBox.classList.add('alert-danger');
-        logBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please Upload an image folder.';
-        return;
-    }
-
-    uploadLoader.style.display = 'block';
-    uploadFilesButton.disabled = true;
-    progressContainer.classList.remove('d-none');
-    progressBar.style.width = '0%';
-
     try {
+        showLoader('uploadLoader');
+        if (!validExcelFile(excelUploadInput)) {
+            return;
+        }
+        const imageFiles = Array.from(folderUploadInput.files).filter(file =>
+            /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(file.name) &&
+            file.webkitRelativePath.split('/').length === 2
+        );
+        const excelFile = excelUploadInput.files[0];
+
+        if (!excelFile || imageFiles.length === 0) {
+            logBox.classList.remove('d-none');
+            logBox.classList.add('alert-danger');
+            logBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please Upload an image folder.';
+            return;
+        }
+
+        uploadFilesButton.disabled = true;
+        progressContainer.classList.remove('d-none');
+        progressBar.style.width = '0%';
+
         // Read Excel file
         const reader = new FileReader();
         const excelData = await new Promise((resolve) => {
@@ -346,16 +419,14 @@ async function uploadBatch() {
         displayProduct(listOfProducts);
         clearUploadInputs();
     } catch (error) {
-        console.error("Error uploading batch: ", error);
-        logBox.classList.remove('d-none');
-        logBox.classList.add('alert-danger');
-        logBox.innerHTML = `<i class="fas fa-times-circle"></i> Error: ${error.message}`;
+        console.error('Error uploading batch:', error);
+        showAlert('Error uploading batch. Please try again.', 'danger');
     } finally {
         document.querySelectorAll(".form-control").forEach(input =>
             input.classList.remove("is-valid", "is-invalid"));
         document.querySelectorAll(".valid-tooltip, .invalid-tooltip").forEach(tooltip =>
             tooltip.remove());
-        uploadLoader.style.display = 'none';
+        hideLoader('uploadLoader');
         uploadFilesButton.disabled = false;
         progressContainer.classList.add('d-none');
     }
@@ -414,6 +485,28 @@ function display(prod, index) {
     `;
 }
 
+// Function to scroll to add product form
+function scrollToAddProduct() {
+    const addProductSection = document.getElementById('addProductSection');
+    
+    // Switch to Add Product mode
+    showAddProductMode();
+    
+    // Smooth scroll to the form
+    addProductSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+    });
+    
+    // Add highlight animation
+    const addProductForm = document.getElementById('addProductForm');
+    addProductForm.classList.add('animate__animated', 'animate__pulse');
+    setTimeout(() => {
+        addProductForm.classList.remove('animate__animated', 'animate__pulse');
+    }, 1000);
+}
+
+// Update the updateProduct function to include scrolling
 function updateProduct(docId, index) {
     const product = listOfProducts[index];
     productName.value = product.name;
@@ -435,6 +528,9 @@ function updateProduct(docId, index) {
     addProductButton.classList.replace("btn-primary", "btn-info");
     addProductButton.removeAttribute("onclick");
     addProductButton.setAttribute("onclick", `updateProductList('${docId}', ${index})`);
+
+    // Scroll to the form
+    scrollToAddProduct();
 }
 
 async function updateProductList(docId, index) {
@@ -676,3 +772,114 @@ folderUploadInput.addEventListener('change', updateFileList);
 
 // Initial mode
 showAddProductMode();
+
+// Add animation classes to elements when they become visible
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation to form elements
+    const formElements = document.querySelectorAll('.product-form > div');
+    formElements.forEach((element, index) => {
+        element.classList.add('animate__animated', 'animate__fadeIn');
+        element.style.animationDelay = `${index * 0.1}s`;
+    });
+
+    // Add animation to table rows
+    const tableRows = document.querySelectorAll('#product-list tr');
+    tableRows.forEach((row, index) => {
+        row.classList.add('animate__animated', 'animate__fadeIn');
+        row.style.animationDelay = `${index * 0.1}s`;
+    });
+
+    // Add hover effects to buttons
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(button => {
+        button.addEventListener('mouseenter', function() {
+            this.classList.add('animate__animated', 'animate__pulse');
+        });
+        button.addEventListener('mouseleave', function() {
+            this.classList.remove('animate__animated', 'animate__pulse');
+        });
+    });
+
+    // Add animation to modal elements
+    const usageModal = document.getElementById('usageModal');
+    if (usageModal) {
+        usageModal.addEventListener('show.bs.modal', function() {
+            const modalContent = this.querySelector('.modal-content');
+            modalContent.classList.add('animate__animated', 'animate__zoomIn');
+        });
+    }
+
+    // Add animation to delete confirmation modal
+    const deleteModal = document.getElementById('confirmDeleteModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function() {
+            const modalContent = this.querySelector('.modal-content');
+            modalContent.classList.add('animate__animated', 'animate__zoomIn');
+        });
+    }
+
+    // Add animation to file upload area
+    const uploadArea = document.getElementById('folderUploadArea');
+    if (uploadArea) {
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('animate__animated', 'animate__pulse');
+        });
+        uploadArea.addEventListener('dragleave', function() {
+            this.classList.remove('animate__animated', 'animate__pulse');
+        });
+        uploadArea.addEventListener('drop', function() {
+            this.classList.remove('animate__animated', 'animate__pulse');
+        });
+    }
+
+    // Add animation to search input
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('focus', function() {
+            this.classList.add('animate__animated', 'animate__pulse');
+        });
+        searchInput.addEventListener('blur', function() {
+            this.classList.remove('animate__animated', 'animate__pulse');
+        });
+    }
+});
+
+// Enhance the addProduct function with animations
+const originalAddProduct = window.addProduct;
+window.addProduct = function() {
+    const button = document.getElementById('add-product-button');
+    button.classList.add('animate__animated', 'animate__bounce');
+    setTimeout(() => {
+        button.classList.remove('animate__animated', 'animate__bounce');
+        originalAddProduct();
+    }, 300);
+};
+
+// Enhance the uploadBatch function with animations
+const originalUploadBatch = window.uploadBatch;
+window.uploadBatch = function() {
+    const button = document.getElementById('upload-files-button');
+    button.classList.add('animate__animated', 'animate__bounce');
+    setTimeout(() => {
+        button.classList.remove('animate__animated', 'animate__bounce');
+        originalUploadBatch();
+    }, 300);
+};
+
+// Enhance the searchProduct function with animations
+const originalSearchProduct = window.searchProduct;
+window.searchProduct = function(value) {
+    const rows = document.querySelectorAll('#product-list tr');
+    rows.forEach(row => {
+        row.classList.remove('animate__animated', 'animate__fadeIn');
+    });
+    originalSearchProduct(value);
+    setTimeout(() => {
+        const newRows = document.querySelectorAll('#product-list tr');
+        newRows.forEach((row, index) => {
+            row.classList.add('animate__animated', 'animate__fadeIn');
+            row.style.animationDelay = `${index * 0.1}s`;
+        });
+    }, 100);
+};
